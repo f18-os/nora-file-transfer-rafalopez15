@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-import sys, os, socket, params
+import sys, os, socket, params, time
 from threading import Thread
 from framedSock import FramedStreamSock
 
@@ -24,6 +24,7 @@ lsock.listen(5)
 print("listening on:", bindAddr)
 
 class ServerThread(Thread):
+    requestCount = 0            # one instance / class
     def __init__(self, sock, debug):
         Thread.__init__(self, daemon=True)
         self.fsock, self.debug = FramedStreamSock(sock, debug), debug
@@ -34,8 +35,10 @@ class ServerThread(Thread):
             if not msg:
                 if self.debug: print(self.fsock, "server thread done")
                 return
-            print("rec'd", msg)
-            msg = msg + b"!"
+            requestNum = ServerThread.requestCount
+            time.sleep(0.001)
+            ServerThread.requestCount = requestNum + 1
+            msg = ("%s! (%d)" % (msg, requestNum)).encode()
             self.fsock.sendmsg(msg)
 
 
